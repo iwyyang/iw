@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>微信兼容版 - 抖音热门弹窗</title>
+    <title>✨✨✨</title>
     <style>
       * {
         margin: 0;
@@ -171,27 +171,21 @@
       .icon-gift {
         font-size: 20px;
       }
-
-      .color-code {
-        font-size: 10px;
-        color: rgba(0, 0, 0, 0.15);
-        margin-top: 5px;
-      }
     </style>
   </head>
   <body>
-    <header>
-      <h1>点击开启好运弹窗✨</h1>
-      <p>微信专属适配版，点击按钮触发弹窗，无广告不扰民～</p>
+    <!-- <header>
+      <h1>自动开启好运弹窗✨</h1>
+      <p>页面加载完成后自动触发，也可点击按钮再次召唤～</p>
     </header>
 
     <main>
       <div class="btn-container">
         <button id="startBtn">
-          <span class="icon-gift">🎁</span> 点击触发弹窗
+          <span class="icon-gift">🎁</span> 再次触发弹窗
         </button>
       </div>
-    </main>
+    </main> -->
 
     <div id="popupContainer"></div>
 
@@ -319,6 +313,7 @@
         delay: 300,
         minSize: 120,
         maxSize: 150,
+        autoTriggerDelay: 500, // 自动弹窗延迟时间
       };
 
       let colorPool = [];
@@ -363,6 +358,8 @@
         popup.style.backgroundColor = colorConfig.bg;
         popup.style.border = `1px solid ${colorConfig.border}`;
 
+        // <button class="close-btn">关闭</button>
+        // <div class="color-code">${colorConfig.bg} | 循环${cycleCount}次</div>
         popup.innerHTML = `
         <div class="popup-content">
           <div class="popup-icon" style="background-color: ${hexToRgba(
@@ -372,8 +369,6 @@
             <span class="icon-heart">♥</span>
           </div>
           <p class="popup-text">${text}</p>
-          <button class="close-btn">关闭</button>
-          <div class="color-code">${colorConfig.bg} | 循环${cycleCount}次</div>
         </div>
       `;
 
@@ -400,20 +395,20 @@
 
         popup.addEventListener("click", closePopup);
 
-        popup.querySelector(".close-btn").addEventListener(
-          "touchstart",
-          (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            closePopup();
-          },
-          { passive: false }
-        );
+        // popup.querySelector(".close-btn").addEventListener(
+        //   "touchstart",
+        //   (e) => {
+        //     e.preventDefault();
+        //     e.stopPropagation();
+        //     closePopup();
+        //   },
+        //   { passive: false }
+        // );
 
-        popup.querySelector(".close-btn").addEventListener("click", (e) => {
-          e.stopPropagation();
-          closePopup();
-        });
+        // popup.querySelector(".close-btn").addEventListener("click", (e) => {
+        //   e.stopPropagation();
+        //   closePopup();
+        // });
 
         setTimeout(closePopup, 6000 + Math.random() * 4000);
       }
@@ -426,7 +421,7 @@
         return `rgba(${r}, ${g}, ${b}, ${alpha})`;
       }
 
-      // 批量创建弹窗（仅用户点击后触发）
+      // 批量创建弹窗
       function createPopups() {
         document.getElementById("popupContainer").innerHTML = "";
         cycleCount = 0;
@@ -450,19 +445,24 @@
         });
       }
 
-      // 微信适配：仅用户点击按钮后触发弹窗（关键！避免被拦截）
-      document.getElementById("startBtn").addEventListener(
-        "touchstart",
-        (e) => {
-          e.preventDefault();
-          createPopups();
-        },
-        { passive: false }
-      );
+      // 自动触发弹窗（页面加载完成后延迟执行）
+      document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(createPopups, popupConfig.autoTriggerDelay);
+      });
 
-      document
-        .getElementById("startBtn")
-        .addEventListener("click", createPopups);
+      // 保留手动点击触发功能
+      // document.getElementById("startBtn").addEventListener(
+      //   "touchstart",
+      //   (e) => {
+      //     e.preventDefault();
+      //     createPopups();
+      //   },
+      //   { passive: false }
+      // );
+
+      // document
+      //   .getElementById("startBtn")
+      //   .addEventListener("click", createPopups);
 
       // 窗口适配
       window.addEventListener("resize", () => {
