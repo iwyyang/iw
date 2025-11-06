@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>微信兼容版 - 抖音热门弹窗</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+      }
+
+      body {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #fdf2f8 0%, #f3e8ff 100%);
+        overflow-x: hidden;
+        position: relative;
+      }
+
+      header {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 15px;
+        text-align: center;
+      }
+
+      h1 {
+        font-size: clamp(1.8rem, 8vw, 2.5rem);
+        font-weight: 700;
+        background: linear-gradient(90deg, #ff2d55, #ff0080);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        margin-bottom: 15px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      header p {
+        color: #666;
+        max-width: 350px;
+        margin: 0 auto 30px;
+        line-height: 1.6;
+        font-size: 16px;
+      }
+
+      main {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px 15px;
+      }
+
+      .btn-container {
+        display: flex;
+        justify-content: center;
+      }
+
+      #startBtn {
+        background: #ff2d55;
+        color: white;
+        border: none;
+        font-size: 18px;
+        font-weight: 600;
+        padding: 15px 35px;
+        border-radius: 50px;
+        box-shadow: 0 6px 20px rgba(255, 45, 85, 0.4);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        touch-action: manipulation;
+      }
+
+      #startBtn:hover {
+        background: #e0254a;
+        box-shadow: 0 8px 25px rgba(255, 45, 85, 0.5);
+        transform: translateY(-3px);
+      }
+
+      #popupContainer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        z-index: 9999;
+      }
+
+      @keyframes popupBounce {
+        0% {
+          opacity: 0;
+          transform: scale(0.5);
+        }
+        70% {
+          transform: scale(1.1);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      .popup {
+        position: absolute;
+        opacity: 0;
+        pointer-events: auto;
+        cursor: pointer;
+        border-radius: 16px;
+        padding: 15px;
+        box-shadow: 0 8px 20px -5px rgba(255, 45, 85, 0.3);
+        animation: popupBounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+          forwards;
+        transition: all 0.3s ease;
+        overflow: hidden;
+      }
+
+      .popup-content {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        text-align: center;
+      }
+
+      .popup-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 12px;
+      }
+
+      .popup-text {
+        color: #333;
+        line-height: 1.5;
+        margin-bottom: 12px;
+        flex-grow: 1;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        font-size: 14px;
+      }
+
+      .close-btn {
+        background: #f1f1f1;
+        color: #666;
+        border: none;
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+        touch-action: manipulation;
+      }
+
+      .close-btn:hover {
+        background: #e5e5e5;
+      }
+
+      .icon-heart {
+        color: #ff2d55;
+        font-size: 18px;
+      }
+
+      .icon-gift {
+        font-size: 20px;
+      }
+
+      .color-code {
+        font-size: 10px;
+        color: rgba(0, 0, 0, 0.15);
+        margin-top: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>点击开启好运弹窗✨</h1>
+      <p>微信专属适配版，点击按钮触发弹窗，无广告不扰民～</p>
+    </header>
+
+    <main>
+      <div class="btn-container">
+        <button id="startBtn">
+          <span class="icon-gift">🎁</span> 点击触发弹窗
+        </button>
+      </div>
+    </main>
+
+    <div id="popupContainer"></div>
+
+    <script>
+      // 60条正能量文案
+      const popupTexts = [
+        "今天也要元气满满呀！",
+        "你真的超棒的！",
+        "好运正在向你靠近～",
+        "记得好好爱自己❤️",
+        "生活需要一点仪式感",
+        "加油，你可以的！",
+        "保持热爱，奔赴山海",
+        "平安喜乐，万事顺意",
+        "做自己的光，不需要借谁的亮",
+        "愿所有美好都如期而至",
+        "开心最重要啦！",
+        "暴富暴美暴顺利✨",
+        "别emo，向前看！",
+        "每一次努力都不会白费",
+        "享受当下，活在当下",
+        "温柔半两，从容一生",
+        "日子慢慢过，好事会发生",
+        "你值得世间所有美好",
+        "小确幸藏在日常里🌿",
+        "慢慢来，谁还没个努力的过程",
+        "阳光正好，未来可期",
+        "治愈一切不开心的，是你自己",
+        "把烦恼丢掉，腾出地方装快乐",
+        "今日份快乐已送达，请查收📦",
+        "努力的你，闪闪发光",
+        "平凡的日子也有温柔的光芒",
+        "别焦虑，生活是慢慢发光的",
+        "可爱的人，运气都不会太差",
+        "心中有光，脚下有路",
+        "三餐四季，温柔有趣",
+        "做个积极向上的小太阳☀️",
+        "所有遗憾，都是惊喜的铺垫",
+        "认真生活，就能找到藏起来的糖果",
+        "你只管善良，上天自有衡量",
+        "生活虽平凡，却有不期而遇的温暖",
+        "乘风破浪，不负韶华",
+        "每天进步一点点，就是最好的成长",
+        "保持微笑，好运会不请自来",
+        "愿你被世界温柔以待",
+        "简单点，快乐点，糊涂点",
+        "星光不负赶路人，时光不负有心人",
+        "生活嘛，笑一笑就好了😆",
+        "用热爱，对抗生活的平淡",
+        "健康平安，就是最大的幸福",
+        "把日子过成自己喜欢的样子",
+        "努力的意义，是让自己有更多选择",
+        "别将就，你值得更好的",
+        "偶尔放慢脚步，看看沿途风景",
+        "元气加载中…100%✅",
+        "生活总有不期而遇的惊喜",
+        "勇敢一点，你比想象中更强大",
+        "万事皆可期待，未来皆有可能",
+        "好好吃饭，好好睡觉，好好爱自己",
+        "把不开心留在昨天，今天依旧美好",
+        "心态对了，一切都顺了",
+        "做个温暖的人，温暖自己也温暖别人",
+        "好运藏在努力里，也藏在善良里",
+        "生活有点苦，但你很甜🍬",
+        "每段旅程，都有它的意义",
+        "不慌不忙，慢慢成长",
+        "愿你眼里有光，心中有爱",
+        "拒绝内耗，好好生活",
+        "日子有盼头，生活有甜头",
+        "凡是过往，皆为序章；凡是未来，皆有可期",
+        "你若盛开，蝴蝶自来",
+        "保持热爱，闪闪发光",
+        "今日份小美好，请查收🌟",
+        "生活明朗，万物可爱",
+        "努力的人，终会被世界温柔以待",
+      ];
+
+      // 40个颜色组合
+      const allColors = [
+        { bg: "#ffffff", border: "#ff2d55" },
+        { bg: "#fff0f5", border: "#ff0080" },
+        { bg: "#faf5ff", border: "#7928ca" },
+        { bg: "#e6f7ff", border: "#1890ff" },
+        { bg: "#fffbe6", border: "#faad14" },
+        { bg: "#f0fff4", border: "#52c41a" },
+        { bg: "#fff7e6", border: "#fa8c16" },
+        { bg: "#fef7fb", border: "#ff4d94" },
+        { bg: "#f5fafe", border: "#40a9ff" },
+        { bg: "#f9f5ff", border: "#9254de" },
+        { bg: "#f0f9ff", border: "#096dd9" },
+        { bg: "#fcf1f7", border: "#ed4b9e" },
+        { bg: "#eaf6fa", border: "#36cffb" },
+        { bg: "#f5f5f5", border: "#8c8c8c" },
+        { bg: "#faf0f5", border: "#d9480f" },
+        { bg: "#e8f4f8", border: "#29b6f6" },
+        { bg: "#faf6ed", border: "#faad14" },
+        { bg: "#f1f8e9", border: "#66bb6a" },
+        { bg: "#fef5e7", border: "#ff9f43" },
+        { bg: "#fdf2f8", border: "#e53e3e" },
+        { bg: "#f2f9ff", border: "#722ed1" },
+        { bg: "#f5fafe", border: "#00b8d9" },
+        { bg: "#fafafa", border: "#ff6b6b" },
+        { bg: "#f9f7f7", border: "#ff8a80" },
+        { bg: "#e6f0ff", border: "#536dfe" },
+        { bg: "#f0f8fb", border: "#00c48c" },
+        { bg: "#fcf6e5", border: "#ffc53d" },
+        { bg: "#faf0f5", border: "#9f7aea" },
+        { bg: "#e8f5e9", border: "#2e7d32" },
+        { bg: "#fff3e0", border: "#ff7a45" },
+        { bg: "#f0fff0", border: "#388e3c" },
+        { bg: "#ffebee", border: "#c2185b" },
+        { bg: "#e3f2fd", border: "#0288d1" },
+        { bg: "#fff3e0", border: "#fb8c00" },
+        { bg: "#f3e5f5", border: "#ab47bc" },
+        { bg: "#e0f7fa", border: "#00acc1" },
+        { bg: "#fff8e1", border: "#ff6d00" },
+        { bg: "#ede7f6", border: "#7e57c2" },
+        { bg: "#e8f5e9", border: "#1b5e20" },
+        { bg: "#ffecb3", border: "#ff6f00" },
+      ];
+
+      // 弹窗配置（微信适配：减少数量，放慢速度）
+      const popupConfig = {
+        count: 20, // 微信端适中数量，不拥挤
+        delay: 300,
+        minSize: 120,
+        maxSize: 150,
+      };
+
+      let colorPool = [];
+      let cycleCount = 0;
+
+      // 初始化颜色池
+      function initColorPool() {
+        cycleCount++;
+        colorPool = JSON.parse(JSON.stringify(allColors)).sort(
+          () => 0.5 - Math.random()
+        );
+      }
+
+      // 获取无重复颜色
+      function getUniqueColor() {
+        if (colorPool.length === 0) initColorPool();
+        return colorPool.shift();
+      }
+
+      // 创建弹窗
+      function createPopup(text, index) {
+        const popup = document.createElement("div");
+        popup.className = "popup";
+
+        const size =
+          Math.floor(
+            Math.random() * (popupConfig.maxSize - popupConfig.minSize)
+          ) + popupConfig.minSize;
+        const colorConfig = getUniqueColor();
+
+        const viewportWidth = document.documentElement.clientWidth;
+        const viewportHeight = document.documentElement.clientHeight;
+        const maxX = viewportWidth - size - 15;
+        const maxY = viewportHeight - size - 40;
+        const x = Math.max(15, Math.floor(Math.random() * maxX));
+        const y = Math.max(40, Math.floor(Math.random() * maxY));
+
+        popup.style.width = `${size}px`;
+        popup.style.left = `${x}px`;
+        popup.style.top = `${y}px`;
+        popup.style.zIndex = 9999 + index;
+        popup.style.backgroundColor = colorConfig.bg;
+        popup.style.border = `1px solid ${colorConfig.border}`;
+
+        popup.innerHTML = `
+        <div class="popup-content">
+          <div class="popup-icon" style="background-color: ${hexToRgba(
+            colorConfig.border,
+            0.1
+          )}">
+            <span class="icon-heart">♥</span>
+          </div>
+          <p class="popup-text">${text}</p>
+          <button class="close-btn">关闭</button>
+          <div class="color-code">${colorConfig.bg} | 循环${cycleCount}次</div>
+        </div>
+      `;
+
+        const container = document.getElementById("popupContainer");
+        container.appendChild(popup);
+
+        // 微信适配：优先touch事件，兼容click
+        function closePopup() {
+          popup.style.opacity = "0";
+          popup.style.transform = "scale(0.8)";
+          setTimeout(() => {
+            if (popup.parentNode) popup.parentNode.removeChild(popup);
+          }, 300);
+        }
+
+        popup.addEventListener(
+          "touchstart",
+          (e) => {
+            e.preventDefault();
+            closePopup();
+          },
+          { passive: false }
+        ); // 微信端需显式关闭passive
+
+        popup.addEventListener("click", closePopup);
+
+        popup.querySelector(".close-btn").addEventListener(
+          "touchstart",
+          (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            closePopup();
+          },
+          { passive: false }
+        );
+
+        popup.querySelector(".close-btn").addEventListener("click", (e) => {
+          e.stopPropagation();
+          closePopup();
+        });
+
+        setTimeout(closePopup, 6000 + Math.random() * 4000);
+      }
+
+      // 十六进制转RGBA
+      function hexToRgba(hex, alpha) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+
+      // 批量创建弹窗（仅用户点击后触发）
+      function createPopups() {
+        document.getElementById("popupContainer").innerHTML = "";
+        cycleCount = 0;
+        initColorPool();
+
+        // 文字循环复用
+        const repeatedTexts = [];
+        const textCycle = Math.ceil(popupConfig.count / popupTexts.length);
+        for (let i = 0; i < textCycle; i++) {
+          repeatedTexts.push(
+            ...[...popupTexts].sort(() => 0.5 - Math.random())
+          );
+        }
+        const selectedTexts = repeatedTexts.slice(0, popupConfig.count);
+
+        // 逐个创建
+        selectedTexts.forEach((text, index) => {
+          setTimeout(() => {
+            createPopup(text, index);
+          }, index * popupConfig.delay);
+        });
+      }
+
+      // 微信适配：仅用户点击按钮后触发弹窗（关键！避免被拦截）
+      document.getElementById("startBtn").addEventListener(
+        "touchstart",
+        (e) => {
+          e.preventDefault();
+          createPopups();
+        },
+        { passive: false }
+      );
+
+      document
+        .getElementById("startBtn")
+        .addEventListener("click", createPopups);
+
+      // 窗口适配
+      window.addEventListener("resize", () => {
+        const popups = document.querySelectorAll(".popup");
+        popups.forEach((popup) => {
+          const size = popup.offsetWidth;
+          const viewportWidth = document.documentElement.clientWidth;
+          const viewportHeight = document.documentElement.clientHeight;
+          const maxX = viewportWidth - size - 15;
+          const maxY = viewportHeight - size - 40;
+          popup.style.left = `${Math.max(
+            15,
+            Math.min(parseInt(popup.style.left), maxX)
+          )}px`;
+          popup.style.top = `${Math.max(
+            40,
+            Math.min(parseInt(popup.style.top), maxY)
+          )}px`;
+        });
+      });
+    </script>
+  </body>
+</html>
